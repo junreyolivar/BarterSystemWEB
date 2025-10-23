@@ -1,0 +1,235 @@
+﻿@{
+    ViewData["Title"] = "Chat";
+    var selectedUser = ViewBag.SelectedUser as BarterSystem.Models.User;
+    var messages = ViewBag.Messages as List<BarterSystem.Models.Message> ?? new List<BarterSystem.Models.Message>();
+    var chatUsers = ViewBag.ChatUsers as List<BarterSystem.Models.User> ?? new List<BarterSystem.Models.User>();
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-comments me-2"></i>Chat</h2>
+
+    <div class="row">
+        <!-- Chat Users List -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Chat Users</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (chatUsers.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var user in chatUsers)
+                            {
+                                <a href="/Chat/Index?userId=@user.Id"
+                                   class="list-group-item list-group-item-action @(selectedUser?.Id == user.Id ? "active" : "")">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@user.Username</strong>
+                                            <br>
+                                            <small class="@(selectedUser?.Id == user.Id ? "text-light" : "text-muted")">@user.DisplayName</small>
+                                        </div>
+                                        <span class="badge bg-danger unread-badge" data-user-id="@user.Id" style="display: none;"></span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center p-4">
+                            <p class="text-muted">No chat history yet.</p>
+                            <p class="text-muted small">Start trading with users to begin chatting!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    @if (selectedUser != null)
+                    {
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>Chat with @selectedUser.Username
+                        </h5>
+                    }
+                    else
+                    {
+                        <h5 class="mb-0 text-muted">Select a user to start chatting</h5>
+                    }
+                </div>
+
+                <div class="card-body" style="height: 400px; overflow-y: auto;" id="chatMessages">
+                    @if (selectedUser != null)
+                    {
+                        foreach (var message in messages)
+                        {
+                            <div class="message @(message.SenderId == Context.Session.GetInt32("UserId") ? "own-message" : "other-message") mb-3">
+                                <div class="d-flex @(message.SenderId == Context.Session.GetInt32("UserId") ? "justify-content-end" : "justify-content-start")">
+                                    <div class="message-bubble @(message.SenderId == Context.Session.GetInt32("UserId") ? "bg-primary text-white" : "bg-light") p-3 rounded">
+                                        <div class="message-content">@message.Content</div>
+                                        <div class="message-time small @(message.SenderId == Context.Session.GetInt32("UserId") ? "text-light" : "text-muted") mt-1">
+                                            @message.SentAt.ToString("MMM dd, yyyy hh:mm tt")
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted p-5">
+                            <i class="fas fa-comments fa-3x mb-3"></i>
+                            <p>Select a user from the list to start chatting</p>
+                        </div>
+                    }
+                </div>
+
+                @if (selectedUser != null)
+                {
+                    <div class="card-footer">
+                        <form id="messageForm" class="d-flex">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" id="receiverId" value="@selectedUser.Id" />
+                            <input type="text" id="messageInput" class="form-control me-2" placeholder="Type your message..." required />
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .message-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .own-message .message-bubble {
+            border-bottom-right-radius: 0;
+        }
+
+        .other-message .message-bubble {
+            border-bottom-left-radius: 0;
+        }
+
+        #chatMessages {
+            background-color: #f8f9fa;
+        }
+
+        .unread-badge {
+            font-size: 0.7rem;
+        }
+
+        .list-group-item.active {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Auto-scroll to bottom of chat
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Send message
+        document.addEventListener('DOMContentLoaded', function() {
+            scrollToBottom();
+
+            const messageForm = document.getElementById('messageForm');
+            if (messageForm) {
+                messageForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const messageInput = document.getElementById('messageInput');
+                    const receiverId = document.getElementById('receiverId').value;
+                    const content = messageInput.value.trim();
+
+                    if (!content) return;
+
+                    try {
+                        const response = await fetch('/Chat/SendMessage', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `receiverId=${receiverId}&content=${encodeURIComponent(content)}&__RequestVerificationToken=@Html.AntiForgeryToken()`
+                        });
+
+                        const result = await response.json();
+                        debugger;
+                        if (result.success) {
+                            messageInput.value = '';
+                            // Reload page to show new message
+                            window.location.reload();
+                        } else {
+                            debugger;F
+                            alert(result.error || 'Error sending message');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        debugger;
+                        alert('Error sending message');
+                    }
+                });
+            }
+
+            // Real-time message updates (polling every 5 seconds)
+            const receiverId = @(selectedUser?.Id ?? 0);
+            if (receiverId > 0) {
+                setInterval(async () => {
+                    try {
+                        const response = await fetch(`/Chat/GetMessa
+                        ges?userId=${receiverId}`);
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // You can implement real-time message updates here
+                            // For now, we'll just update the unread badges
+                            updateUnreadBadges();
+                        }
+                    } catch (error) {
+                        console.error('Error fetching messages:', error);
+                    }
+                }, 5000);
+            }
+
+            // Update unread message badges
+            updateUnreadBadges();
+        });
+
+        // Update unread message badges
+        async function updateUnreadBadges() {
+            try {
+                const response = await fetch('/Chat/GetUnreadCount');
+                const result = await response.json();
+
+                const badge = document.getElementById('chatBadge');
+                if (badge) {
+                    if (result.count > 0) {
+                        badge.textContent = result.count;
+                        badge.style.display = 'inline';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating unread badges:', error);
+            }
+        }
+    </script>
+}

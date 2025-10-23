@@ -1,0 +1,99 @@
+﻿@model IEnumerable<BarterSystem.Models.Trade>
+
+@{
+    ViewData["Title"] = "Trade History";
+    var userId = Context.Session.GetInt32("UserId");
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-history me-2"></i>My Trade History</h2>
+        <a asp-action="Index" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Trades
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center py-5">
+            <h4><i class="fas fa-info-circle me-2"></i>No trade history</h4>
+            <p class="mb-3">You haven't completed any trades yet.</p>
+            <a asp-action="Create" class="btn btn-primary">Start Trading</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Partner</th>
+                        <th>You Gave</th>
+                        <th>You Received</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var trade in Model)
+                    {
+                        var offeredItem = trade.TradeItems.FirstOrDefault(ti => ti.IsOfferedItem)?.Item;
+                        var requestedItem = trade.TradeItems.FirstOrDefault(ti => !ti.IsOfferedItem)?.Item;
+
+                        var isRequester = trade.RequestedById == userId;
+                        var partner = isRequester ? trade.RequestedTo : trade.RequestedBy;
+                        var youGave = isRequester ? offeredItem : requestedItem;
+                        var youReceived = isRequester ? requestedItem : offeredItem;
+
+                        <tr>
+                            <td>@trade.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>@partner.Username</td>
+                            <td>
+                                @if (youGave != null)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(youGave.ImageUrl))
+                                        {
+                                            <img src="@youGave.ImageUrl" width="40" height="40" class="rounded me-2" style="object-fit: cover;">
+                                        }
+                                        <div>
+                                            <strong>@youGave.Name</strong>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                @if (youReceived != null)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(youReceived.ImageUrl))
+                                        {
+                                            <img src="@youReceived.ImageUrl" width="40" height="40" class="rounded me-2" style="object-fit: cover;">
+                                        }
+                                        <div>
+                                            <strong>@youReceived.Name</strong>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                @if (trade.Status == "Completed")
+                                {
+                                    <span class="badge bg-success">Completed</span>
+                                }
+                                else if (trade.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Cancelled</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

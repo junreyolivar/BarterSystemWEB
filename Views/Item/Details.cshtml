@@ -1,0 +1,68 @@
+﻿@model BarterSystem.Models.Item
+
+@{
+    ViewData["Title"] = "Item Details";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Item Image -->
+            @if (!string.IsNullOrEmpty(Model.ImageUrl) && Model.ImageUrl != "/images/no-image.jpg")
+            {
+                <img src="@Model.ImageUrl" class="img-fluid rounded shadow" alt="@Model.Name"
+                     style="max-height: 500px; object-fit: cover;">
+            }
+            else
+            {
+                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                     style="height: 300px;">
+                    <span class="text-muted text-center">
+                        <i class="fas fa-image fa-3x mb-3 d-block"></i>
+                        No Image Available
+                    </span>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="card-title">@Model.Name</h2>
+
+                    <div class="mb-4">
+                        <h5>Description:</h5>
+                        <p class="text-muted">@(Model.Description ?? "No description provided")</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h5>Owner:</h5>
+                        <p class="text-muted">
+                            <i class="fas fa-user me-2"></i>@Model.Owner?.DisplayName
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h5>Listed Date:</h5>
+                        <p class="text-muted">
+                            <i class="fas fa-calendar me-2"></i>@Model.CreatedAt.ToString("MMMM dd, yyyy")
+                        </p>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="mailto:@Model.Owner?.Email" class="btn btn-primary">
+                            <i class="fas fa-envelope me-2"></i>Contact Owner
+                        </a>
+                        <a asp-controller="Chat" asp-action="Index" asp-route-userId="@Model.Owner.Id"
+                           class="btn btn-info mt-2">
+                            <i class="fas fa-comments me-2"></i>Chat with Owner
+                        </a>
+                        <a asp-action="All" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Browse
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

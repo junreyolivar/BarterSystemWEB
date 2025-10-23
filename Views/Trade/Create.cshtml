@@ -1,0 +1,167 @@
+﻿@{
+    ViewData["Title"] = "Create Trade";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-handshake me-2"></i>Create New Trade</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="Create" asp-controller="Trade">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Trade With User</label>
+                                <select name="requestedToId" class="form-select" required>
+                                    <option value="">-- Select User --</option>
+                                    @if (ViewBag.Users != null)
+                                    {
+                                        foreach (var user in (List<BarterSystem.Models.User>)ViewBag.Users)
+                                        {
+                                            <option value="@user.Id">@user.Username (@user.DisplayName)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Your Item to Offer</label>
+                                <select name="offeredItemId" class="form-select" required>
+                                    <option value="">-- Select Your Item --</option>
+                                    @if (ViewBag.MyItems != null)
+                                    {
+                                        foreach (var item in (List<BarterSystem.Models.Item>)ViewBag.MyItems)
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-12 mb-4">
+                                <label class="form-label fw-bold">Item You Want</label>
+                                <select name="requestedItemId" class="form-select" required>
+                                    <option value="">-- Select Item You Want --</option>
+                                    @if (ViewBag.OtherItems != null)
+                                    {
+                                        foreach (var item in (List<BarterSystem.Models.Item>)ViewBag.OtherItems)
+                                        {
+                                            <option value="@item.Id">@item.Name (by @item.Owner.Username)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Send Trade Request
+                            </button>
+                            <a asp-action="Pending" asp-controller="TradeRequest" class="btn btn-secondary btn-lg ms-2">
+                                <i class="fas fa-inbox me-2"></i>View Requests
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Info -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="fas fa-box me-2"></i>Your Items
+                                @if (ViewBag.MyItems != null)
+                                {
+                                    <span class="badge bg-primary">@(((List<BarterSystem.Models.Item>)ViewBag.MyItems).Count)</span>
+                                }
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            @if (ViewBag.MyItems == null || ((List<BarterSystem.Models.Item>)ViewBag.MyItems).Count == 0)
+                            {
+                                <p class="text-muted">You have no items. <a asp-controller="Item" asp-action="Create">Add items first</a>.</p>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @{
+                                        var myItemsList = (List<BarterSystem.Models.Item>)ViewBag.MyItems;
+                                        var displayedMyItems = 0;
+                                    }
+                                    @foreach (var item in myItemsList)
+                                    {
+                                        if (displayedMyItems < 5)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>@item.Name</span>
+                                                <small class="text-muted">Your Item</small>
+                                            </li>
+                                            displayedMyItems++;
+                                        }
+                                    }
+                                    @if (myItemsList.Count > 5)
+                                    {
+                                        <li class="list-group-item text-center">
+                                            <small class="text-muted">and @(myItemsList.Count - 5) more items...</small>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="fas fa-compass me-2"></i>Available Items
+                                @if (ViewBag.OtherItems != null)
+                                {
+                                    <span class="badge bg-primary">@(((List<BarterSystem.Models.Item>)ViewBag.OtherItems).Count)</span>
+                                }
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            @if (ViewBag.OtherItems == null || ((List<BarterSystem.Models.Item>)ViewBag.OtherItems).Count == 0)
+                            {
+                                <p class="text-muted">No items available for trading.</p>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @{
+                                        var otherItemsList = (List<BarterSystem.Models.Item>)ViewBag.OtherItems;
+                                        var displayedOtherItems = 0;
+                                    }
+                                    @foreach (var item in otherItemsList)
+                                    {
+                                        if (displayedOtherItems < 5)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>@item.Name</span>
+                                                <small class="text-muted">by @item.Owner.Username</small>
+                                            </li>
+                                            displayedOtherItems++;
+                                        }
+                                    }
+                                    @if (otherItemsList.Count > 5)
+                                    {
+                                        <li class="list-group-item text-center">
+                                            <small class="text-muted">and @(otherItemsList.Count - 5) more items...</small>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

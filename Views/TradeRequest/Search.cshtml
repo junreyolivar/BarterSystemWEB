@@ -1,0 +1,55 @@
+﻿@{
+    ViewData["Title"] = "Search Users";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-search me-2"></i>Search Users to Trade With</h2>
+
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="query" class="form-control" placeholder="Search username or display name..." value="@Context.Request.Query["query"]">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search me-2"></i>Search
+            </button>
+        </div>
+    </form>
+
+    @if (ViewBag.Users != null && ((List<BarterSystem.Models.User>)ViewBag.Users).Count > 0)
+    {
+        <div class="row">
+            @foreach (var user in (List<BarterSystem.Models.User>)ViewBag.Users)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-user me-2"></i>@user.Username
+                            </h5>
+                            <p class="card-text">
+                                <strong>Display Name:</strong> @user.DisplayName<br>
+                                <strong>Items:</strong> @user.Items.Count items available
+                            </p>
+                            <a asp-action="UserItems" asp-route-id="@user.Id" class="btn btn-primary">
+                                <i class="fas fa-eye me-2"></i>View Items & Trade
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(Context.Request.Query["query"]))
+    {
+        <div class="alert alert-info text-center py-4">
+            <h4><i class="fas fa-search me-2"></i>No users found</h4>
+            <p class="mb-0">No users found matching your search criteria.</p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-4">
+            <h4><i class="fas fa-info-circle me-2"></i>Search for Trading Partners</h4>
+            <p class="mb-0">Enter a username or display name to search for trading partners.</p>
+        </div>
+    }
+</div>

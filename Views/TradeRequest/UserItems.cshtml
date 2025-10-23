@@ -1,0 +1,81 @@
+﻿@model BarterSystem.Models.User
+
+@{
+    ViewData["Title"] = $"{Model.Username}'s Items";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-box me-2"></i>@Model.Username's Items</h2>
+        <a asp-action="Search" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Search
+        </a>
+    </div>
+
+    @if (Model.Items == null || Model.Items.Count == 0)
+    {
+        <div class="alert alert-info text-center py-5">
+            <h4><i class="fas fa-info-circle me-2"></i>No Items Available</h4>
+            <p class="mb-0">This user doesn't have any items available for trading.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model.Items)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" class="card-img-top" alt="@item.Name" style="height: 200px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-muted">
+                                    <i class="fas fa-image fa-2x"></i><br>
+                                    No Image
+                                </span>
+                            </div>
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Name</h5>
+                            <p class="card-text">@item.Description</p>
+
+                            @if (ViewBag.MyItems != null && ((List<BarterSystem.Models.Item>)ViewBag.MyItems).Count > 0)
+                            {
+                                <form method="post" asp-action="SendRequest">
+                                    <input type="hidden" name="receiverId" value="@Model.Id" />
+                                    <input type="hidden" name="requestedItemId" value="@item.Id" />
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Select your item to trade:</label>
+                                        <select name="offeredItemId" class="form-select" required>
+                                            <option value="">-- Choose your item --</option>
+                                            @foreach (var myItem in (List<BarterSystem.Models.Item>)ViewBag.MyItems)
+                                            {
+                                                <option value="@myItem.Id">@myItem.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Trade Request
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    You need to have items to trade. <a asp-controller="Item" asp-action="Create">Add items first</a>.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

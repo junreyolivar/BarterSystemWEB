@@ -1,0 +1,282 @@
+﻿@{
+    ViewData["Title"] = "Pending Trade Requests";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-inbox me-2"></i>Pending Trade Requests</h2>
+
+    <!-- Incoming Trade Requests -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-download me-2"></i>Incoming Trade Requests
+                @if (ViewBag.IncomingTradeRequests != null && ((List<BarterSystem.Models.TradeRequest>)ViewBag.IncomingTradeRequests).Count > 0)
+                {
+                    <span class="badge bg-light text-primary ms-2">@(((List<BarterSystem.Models.TradeRequest>)ViewBag.IncomingTradeRequests).Count)</span>
+                }
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.IncomingTradeRequests == null || ((List<BarterSystem.Models.TradeRequest>)ViewBag.IncomingTradeRequests).Count == 0)
+            {
+                <p class="text-muted mb-0">No incoming trade requests.</p>
+            }
+            else
+            {
+                foreach (var request in (List<BarterSystem.Models.TradeRequest>)ViewBag.IncomingTradeRequests)
+                {
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6><i class="fas fa-user me-2"></i>From: @request.Requester.Username</h6>
+                                <p class="mb-1">
+                                    <strong>They offer:</strong> @request.OfferedItem.Name
+                                    @if (!string.IsNullOrEmpty(request.OfferedItem.ImageUrl))
+                                    {
+                                        <img src="@request.OfferedItem.ImageUrl" width="50" height="50" class="rounded ms-2" style="object-fit: cover;">
+                                    }
+                                </p>
+                                <p class="mb-1">
+                                    <strong>For your:</strong> @request.RequestedItem.Name
+                                    @if (!string.IsNullOrEmpty(request.RequestedItem.ImageUrl))
+                                    {
+                                        <img src="@request.RequestedItem.ImageUrl" width="50" height="50" class="rounded ms-2" style="object-fit: cover;">
+                                    }
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>Sent: @request.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <form method="post" asp-action="Accept" class="d-inline">
+                                    <input type="hidden" name="id" value="@request.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check me-1"></i>Accept
+                                    </button>
+                                </form>
+                                <form method="post" asp-action="Reject" class="d-inline">
+                                    <input type="hidden" name="id" value="@request.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                </form>
+                                <!-- ✅ CHAT BUTTON -->
+                                <a asp-controller="Chat" asp-action="Index" asp-route-userId="@request.Requester.Id"
+                                   class="btn btn-info btn-sm mt-1">
+                                    <i class="fas fa-comments me-1"></i>Chat
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Incoming Trades -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">
+                <i class="fas fa-handshake me-2"></i>Incoming Trades
+                @if (ViewBag.IncomingTrades != null && ((List<BarterSystem.Models.Trade>)ViewBag.IncomingTrades).Count > 0)
+                {
+                    <span class="badge bg-light text-warning ms-2">@(((List<BarterSystem.Models.Trade>)ViewBag.IncomingTrades).Count)</span>
+                }
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.IncomingTrades == null || ((List<BarterSystem.Models.Trade>)ViewBag.IncomingTrades).Count == 0)
+            {
+                <p class="text-muted mb-0">No incoming trades.</p>
+            }
+            else
+            {
+                foreach (var trade in (List<BarterSystem.Models.Trade>)ViewBag.IncomingTrades)
+                {
+                    var offeredItem = trade.TradeItems.FirstOrDefault(ti => ti.IsOfferedItem)?.Item;
+                    var requestedItem = trade.TradeItems.FirstOrDefault(ti => !ti.IsOfferedItem)?.Item;
+
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6><i class="fas fa-user me-2"></i>From: @trade.RequestedBy.Username</h6>
+                                <p class="mb-1">
+                                    <strong>They offer:</strong> @offeredItem?.Name
+                                    @if (!string.IsNullOrEmpty(offeredItem?.ImageUrl))
+                                    {
+                                        <img src="@offeredItem.ImageUrl" width="50" height="50" class="rounded ms-2" style="object-fit: cover;">
+                                    }
+                                </p>
+                                <p class="mb-1">
+                                    <strong>For your:</strong> @requestedItem?.Name
+                                    @if (!string.IsNullOrEmpty(requestedItem?.ImageUrl))
+                                    {
+                                        <img src="@requestedItem.ImageUrl" width="50" height="50" class="rounded ms-2" style="object-fit: cover;">
+                                    }
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>Sent: @trade.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <form method="post" asp-controller="Trade" asp-action="Approve" class="d-inline">
+                                    <input type="hidden" name="id" value="@trade.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>
+                                </form>
+                                <form method="post" asp-controller="Trade" asp-action="Cancel" class="d-inline">
+                                    <input type="hidden" name="id" value="@trade.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                </form>
+                                <!-- ✅ CHAT BUTTON -->
+                                <a asp-controller="Chat" asp-action="Index" asp-route-userId="@trade.RequestedBy.Id"
+                                   class="btn btn-info btn-sm mt-1">
+                                    <i class="fas fa-comments me-1"></i>Chat
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Outgoing Trade Requests -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-upload me-2"></i>Your Sent Requests
+                @if (ViewBag.OutgoingTradeRequests != null && ((List<BarterSystem.Models.TradeRequest>)ViewBag.OutgoingTradeRequests).Count > 0)
+                {
+                    <span class="badge bg-light text-info ms-2">@(((List<BarterSystem.Models.TradeRequest>)ViewBag.OutgoingTradeRequests).Count)</span>
+                }
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.OutgoingTradeRequests == null || ((List<BarterSystem.Models.TradeRequest>)ViewBag.OutgoingTradeRequests).Count == 0)
+            {
+                <p class="text-muted mb-0">No outgoing trade requests.</p>
+            }
+            else
+            {
+                foreach (var request in (List<BarterSystem.Models.TradeRequest>)ViewBag.OutgoingTradeRequests)
+                {
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6><i class="fas fa-user me-2"></i>To: @request.Receiver.Username</h6>
+                                <p class="mb-1">
+                                    <strong>You offer:</strong> @request.OfferedItem.Name
+                                    @if (!string.IsNullOrEmpty(request.OfferedItem.ImageUrl))
+                                    {
+                                        <img src="@request.OfferedItem.ImageUrl" width="50" height="50" class="rounded ms-2" style="object-fit: cover;">
+                                    }
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Requesting:</strong> @request.RequestedItem.Name
+                                    @if (!string.IsNullOrEmpty(request.RequestedItem.ImageUrl))
+                                    {
+                                        <img src="@request.RequestedItem.ImageUrl" width="50" height="50" class="rounded ms-2" style="object-fit: cover;">
+                                    }
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>Sent: @request.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Waiting Response
+                                </span>
+                                <form method="post" asp-action="CancelRequest" class="d-inline mt-1">
+                                    <input type="hidden" name="id" value="@request.Id" />
+                                    <button type="submit" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-ban me-1"></i>Cancel
+                                    </button>
+                                </form>
+                                <!-- ✅ CHAT BUTTON -->
+                                <a asp-controller="Chat" asp-action="Index" asp-route-userId="@request.Receiver.Id"
+                                   class="btn btn-info btn-sm mt-1">
+                                    <i class="fas fa-comments me-1"></i>Chat
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Outgoing Trades -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-share me-2"></i>Your Sent Trades
+                @if (ViewBag.OutgoingTrades != null && ((List<BarterSystem.Models.Trade>)ViewBag.OutgoingTrades).Count > 0)
+                {
+                    <span class="badge bg-light text-secondary ms-2">@(((List<BarterSystem.Models.Trade>)ViewBag.OutgoingTrades).Count)</span>
+                }
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.OutgoingTrades == null || ((List<BarterSystem.Models.Trade>)ViewBag.OutgoingTrades).Count == 0)
+            {
+                <p class="text-muted mb-0">No outgoing trades.</p>
+                <a asp-controller="Trade" asp-action="Create" class="btn btn-primary mt-2">
+                    <i class="fas fa-handshake me-2"></i>Create New Trade
+                </a>
+            }
+            else
+            {
+                foreach (var trade in (List<BarterSystem.Models.Trade>)ViewBag.OutgoingTrades)
+                {
+                    var offeredItem = trade.TradeItems.FirstOrDefault(ti => ti.IsOfferedItem)?.Item;
+                    var requestedItem = trade.TradeItems.FirstOrDefault(ti => !ti.IsOfferedItem)?.Item;
+
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6><i class="fas fa-user me-2"></i>To: @trade.RequestedTo.Username</h6>
+                                <p class="mb-1">
+                                    <strong>You offer:</strong> @offeredItem?.Name
+                                    @if (!string.IsNullOrEmpty(offeredItem?.ImageUrl))
+                                    {
+                                        <img src="@offeredItem.ImageUrl" width="50" height="50" class="rounded ms-2" style="object-fit: cover;">
+                                    }
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Requesting:</strong> @requestedItem?.Name
+                                    @if (!string.IsNullOrEmpty(requestedItem?.ImageUrl))
+                                    {
+                                        <img src="@requestedItem.ImageUrl" width="50" height="50" class="rounded ms-2" style="object-fit: cover;">
+                                    }
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>Sent: @trade.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Waiting Response
+                                </span>
+                                <form method="post" asp-controller="Trade" asp-action="Cancel" class="d-inline mt-1">
+                                    <input type="hidden" name="id" value="@trade.Id" />
+                                    <button type="submit" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-ban me-1"></i>Cancel
+                                    </button>
+                                </form>
+                                <!-- ✅ CHAT BUTTON -->
+                                <a asp-controller="Chat" asp-action="Index" asp-route-userId="@trade.RequestedTo.Id"
+                                   class="btn btn-info btn-sm mt-1">
+                                    <i class="fas fa-comments me-1"></i>Chat
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

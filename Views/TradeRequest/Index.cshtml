@@ -1,0 +1,82 @@
+﻿@model IEnumerable<BarterSystem.Models.TradeRequest>
+
+@{
+    ViewData["Title"] = "Trade Requests";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-inbox me-2"></i>Trade Requests</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Offered Item</th>
+                    <th>Requested Item</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td>@t.Requester?.Username</td>
+                        <td>@t.Receiver?.Username</td>
+                        <td>@t.OfferedItem?.Name</td>
+                        <td>@t.RequestedItem?.Name</td>
+                        <td>
+                            @if (t.Status == "Pending")
+                            {
+                                <span class="badge bg-warning">Pending</span>
+                            }
+                            else if (t.Status == "Accepted")
+                            {
+                                <span class="badge bg-success">Accepted</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Rejected</span>
+                            }
+                        </td>
+                        <td>
+                            @if (t.Status == "Pending" && t.ReceiverId == Context.Session.GetInt32("UserId"))
+                            {
+                                <div class="btn-group btn-group-sm">
+                                    <form asp-action="Accept" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@t.Id" />
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-check me-1"></i>Accept
+                                        </button>
+                                    </form>
+
+                                    <form asp-action="Reject" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@t.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-times me-1"></i>Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Send New Request
+        </a>
+        <a asp-action="Search" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-search me-2"></i>Search Users
+        </a>
+    </div>
+</div>

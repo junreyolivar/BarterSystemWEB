@@ -1,0 +1,155 @@
+﻿@model IEnumerable<BarterSystem.Models.Trade>
+
+@{
+    ViewData["Title"] = "All Trades";
+    var userId = Context.Session.GetInt32("UserId");
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-list me-2"></i>All Trades</h2>
+        <div>
+            <a asp-action="Create" class="btn btn-primary me-2">
+                <i class="fas fa-plus me-2"></i>New Trade
+            </a>
+            <a asp-action="TradeHistory" class="btn btn-outline-secondary">
+                <i class="fas fa-history me-2"></i>Trade History
+            </a>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info text-center py-5">
+            <h4><i class="fas fa-info-circle me-2"></i>No trades yet</h4>
+            <p class="mb-3">Start by creating your first trade!</p>
+            <a asp-action="Create" class="btn btn-primary">Create Trade</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Offered Item</th>
+                        <th>Requested Item</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var trade in Model)
+                    {
+                        var offeredItem = trade.TradeItems?.FirstOrDefault(ti => ti.IsOfferedItem)?.Item;
+                        var requestedItem = trade.TradeItems?.FirstOrDefault(ti => !ti.IsOfferedItem)?.Item;
+
+                        <tr>
+                            <td>
+                                @trade.RequestedBy?.Username
+                                @if (trade.RequestedById == userId)
+                                {
+                                    <span class="badge bg-info">You</span>
+                                }
+                            </td>
+                            <td>
+                                @trade.RequestedTo?.Username
+                                @if (trade.RequestedToId == userId)
+                                {
+                                    <span class="badge bg-info">You</span>
+                                }
+                            </td>
+                            <td>
+                                @if (offeredItem != null)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(offeredItem.ImageUrl))
+                                        {
+                                            <img src="@offeredItem.ImageUrl" width="40" height="40" class="rounded me-2" style="object-fit: cover;">
+                                        }
+                                        <div>
+                                            <strong>@offeredItem.Name</strong>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Item not found</span>
+                                }
+                            </td>
+                            <td>
+                                @if (requestedItem != null)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(requestedItem.ImageUrl))
+                                        {
+                                            <img src="@requestedItem.ImageUrl" width="40" height="40" class="rounded me-2" style="object-fit: cover;">
+                                        }
+                                        <div>
+                                            <strong>@requestedItem.Name</strong>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Item not found</span>
+                                }
+                            </td>
+                            <td>
+                                @if (trade.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                                else if (trade.Status == "Completed")
+                                {
+                                    <span class="badge bg-success">Completed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Cancelled</span>
+                                }
+                            </td>
+                            <td>@trade.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                @if (trade.Status == "Pending")
+                                {
+                                    if (trade.RequestedToId == userId)
+                                    {
+                                        <form method="post" asp-action="Approve" class="d-inline">
+                                            <input type="hidden" name="id" value="@trade.Id">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-check me-1"></i>Approve
+                                            </button>
+                                        </form>
+                                        <form method="post" asp-action="Cancel" class="d-inline">
+                                            <input type="hidden" name="id" value="@trade.Id">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-times me-1"></i>Reject
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (trade.RequestedById == userId)
+                                    {
+                                        <form method="post" asp-action="Cancel" class="d-inline">
+                                            <input type="hidden" name="id" value="@trade.Id">
+                                            <button type="submit" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-ban me-1"></i>Cancel
+                                            </button>
+                                        </form>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
